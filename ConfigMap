@@ -1,2 +1,83 @@
-Este diretório tem como objetivo ajudar no entendimento e aplicação do objeto de API ConfigMap do Kubernetes. Isto ocorre através de explicações, em sua maioria, retiradas da documentação oficial e atividades praticas 
+### ConfigMap
+Este diretório tem como objetivo apresentar um resumo da documentação do objeto de API ConfigMap do Kubernetes. Em seguida, desafios praticos. 
+
+ConfigMap é um objeto de API utilizado para armazenar informações não confidenciais em formato de chave-valor. 
+
+Pods podem consumir ```configMap``` como:
+
+1. Variáveis de ambiente   
+2. Argumentos de linha de comando  
+3. Arquivos de configuração em volume
+
+A principal motivação para utilizar ``configMap`` visa a formação de ``pods`` idempotentes, onde a configuração do ambiente é injetada em cada deploy. 
+
+--- 
+
+Diferente da maioria dos objetos de API do Kubernetes que possuem ``spec``, o ``configMap`` é formado por ``data``  e, opcionalmente ``binaryData``. Conforme pode ser observado na execução do comando de criação do manifesto. 
+
+Entrada:
+`````
+kubectl create configmap configmap1 -from-literal=version=v1 --dry-run=client -o yaml > configmap1.yaml
+`````
+
+Saida:
+`````
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap1
+data:
+  version: v1
+
+`````
+
+
+
+----
+
+
+### Desafio de ConfigMap - Nível 0
+
+Objetivo: Criar um configMap com uma variável para ser consumido por um pod. 
+
+1 - Crie um configMap de nome ``meu-configmap`` com a chave-valor ``mensagem="Ola, CKA!"``  
+2 - Crie um pod para consumir esse configmap  
+
+* nome: ``pod-teste-configmap``  
+* imagem: ``nginx:1.27-alpine``  
+* variável: ``MINHA_MSG`` - recebendo o valor do configMap  
+
+3 - Valide com ``kubectl exec -it pod-teste-configmap -- sh echo $MINHA_MSG``
+
+---
+````
+apiVersion: v1 
+data: 
+  mensagem: Ola, CKA! 
+kind: ConfigMap 
+metadata:  
+  name: meu-configmap 
+---
+apiVersion: v1 
+kind: Pod 
+metadata: 
+  creationTimestamp: null 
+  labels: 
+    run: pod-teste-configmap 
+    name: pod-teste-configmap 
+spec: 
+  containers: 
+  - image: nginx:1.27-alpine 
+    name: pod-teste-configmap 
+    env: 
+    - name: MINHA_MSG 
+      valueFrom: 
+        configMapKeyRef: 
+          name: meu-configmap 
+          key: mensagem 
+    resources: {} 
+  dnsPolicy: ClusterFirst 
+  restartPolicy: Always 
+status: {}
+ ````
 
